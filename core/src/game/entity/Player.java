@@ -145,7 +145,7 @@ public class Player extends Entity {
 		gravityOptions.add(0.5f);
 		gravityOptions.add(1f);
 
-		fields.add(new ConsoleField<Float>("Gravity", gravityOptions, 3));
+		fields.add(new ConsoleField<Float>("gravity", gravityOptions, 3));
 		
 		ArrayList<Float> speedOptions = new ArrayList<Float>();
 		speedOptions.add(1f);
@@ -154,10 +154,13 @@ public class Player extends Entity {
 		speedOptions.add(7f);
 		speedOptions.add(9f);
 		
-		fields.add(new ConsoleField<Float>("MoveSpeed", speedOptions, 2));
-		fields.add(new ConsoleField<Float>("ClimbSpeed", speedOptions, 2));
+		fields.add(new ConsoleField<Float>("move_speed", speedOptions, 2));
+		fields.add(new ConsoleField<Float>("climb_speed", speedOptions, 2));
 		
-		fields.add(ConsoleField.createBooleanField("CanJump", true));
+		fields.add(ConsoleField.createBooleanField("can_jump", true));
+		
+		for (int i = 0; i < 5; i++)
+			fields.add(ConsoleField.createBooleanField("unused field", true));
 		
 		consoleObject = new ConsoleObject("obj_player", fields);
 	}

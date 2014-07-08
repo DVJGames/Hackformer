@@ -15,7 +15,7 @@ public class PlatformWalk extends Component {
 	private Animation walkAnim;
 	private float speed;
 	private boolean right;
-	private boolean moved = false;
+	private boolean moved = false, canMove = true;
 
 	private Render render;
 	private Physics physics;
@@ -42,6 +42,11 @@ public class PlatformWalk extends Component {
 	public void update(Camera camera, float dt) {
 		super.update(camera, dt);
 
+		if (!canMove) {
+			render.resetAnimation();
+			return;
+		}
+		
 		if (!moved && physics.isOnGround()) {
 			moved = true;
 			move(1);
@@ -73,6 +78,16 @@ public class PlatformWalk extends Component {
 				physics.velocity.x -= speed * mult;
 			}
 		}
+	}
+
+	public void setCanMove(boolean canMove) {
+		if (!canMove) {
+			if (moved) 
+				move(-1);
+			moved = false;
+		}
+		
+		this.canMove = canMove;
 	}
 
 }

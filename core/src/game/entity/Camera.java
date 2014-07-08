@@ -95,8 +95,8 @@ public class Camera extends Entity {
 
 		ArrayList<ConsoleField<?>> fields = new ArrayList<ConsoleField<?>>();
 
-		fields.add(new ConsoleField<Float>("xOffset", offsetOptions, 2));
-		fields.add(new ConsoleField<Float>("yOffset", offsetOptions, 2));
+		fields.add(new ConsoleField<Float>("x_offset", offsetOptions, 2));
+		fields.add(new ConsoleField<Float>("y_offset", offsetOptions, 2));
 
 		consoleObject = new ConsoleObject("obj_camera", fields);
 	}
