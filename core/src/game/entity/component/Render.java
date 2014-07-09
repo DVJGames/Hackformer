@@ -44,24 +44,26 @@ public class Render extends Component {
 
 		if (animation != null) {
 			TextureRegion region = animation.getKeyFrame(animTime);
-			
+
 			if ((flipped && !region.isFlipX()) || (!flipped && region.isFlipX()))
 				region.flip(true, false);
-			
+
 			batch.draw(region, parent.bounds.x, parent.bounds.y, parent.bounds.width, parent.bounds.height);
 		}
 
 		batch.end();
 	}
 
-	public void setSprite(Sprite sprite) {
+	public Render setSprite(Sprite sprite) {
 		this.sprite = sprite;
 		this.animation = null;
+		return this;
 	}
 
-	public void setAnimation(Animation animation) {
+	public Render setAnimation(Animation animation) {
 		this.animation = animation;
 		this.sprite = null;
+		return this;
 	}
 
 	public Sprite getSprite() {
@@ -72,12 +74,21 @@ public class Render extends Component {
 		return animation;
 	}
 
-	public void resetAnimation() {
+	public Render resetAnimation() {
 		animTime = 0;
+		return this;
+	}
+
+	public Render setFlip(boolean flipped) {
+		this.flipped = flipped;
+		return this;
 	}
 	
-	public void setFlip(boolean flipped) {
-		this.flipped = flipped;
+	public boolean isFinishedAnimation() {
+		if (animation == null)
+			throw new IllegalStateException("Error: There is no animation currently playing!");
+		
+		return animation.isAnimationFinished(animTime);
 	}
 
 	public void dispose() {

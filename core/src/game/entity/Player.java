@@ -33,9 +33,12 @@ public class Player extends Entity {
 	private Physics physics;
 	private ArrayList<ConsoleField<?>> fields;
 	
-	private boolean left = false, right = false, canJump = true, jumpEnabled = true;
+	private boolean[] wasOnGround = new boolean[10];
+	private boolean left = false, right = false, canJump = true;
 	private float moveSpeed;
 	private float climbSpeed;
+	
+	private int jumpCount = 0, maxJumps = 1;
 
 	public Player(float x, float y) {
 		super(new Rectangle(x, y, 30, 46.2f));
@@ -57,12 +60,20 @@ public class Player extends Entity {
 
 		camera.centerAt(bounds.x, bounds.y);
 		
-		if (!jumpEnabled || (!Gdx.input.isKeyPressed(Input.Keys.W) && !Gdx.input.isKeyPressed(Input.Keys.UP)))
+		if (!(Gdx.input.isKeyPressed(Input.Keys.W) || Gdx.input.isKeyPressed(Input.Keys.UP)))
 			render.setSprite(standSprite);
 
+		checkOnGround();
 		moveHorizontally();
 		moveVertically();
 		changeBasedOnConsoleVariables();
+	}
+
+	private void checkOnGround() {
+		wasOnGround[wasOnGround.length - 1] = physics.isOnGround();
+		
+		for (int i = 0; i < wasOnGround.length - 1; i++)
+			wasOnGround[i] = wasOnGround[i + 1];
 	}
 
 	private void moveHorizontally() {
@@ -88,19 +99,22 @@ public class Player extends Entity {
 		}
 
 		if (left || right)
-			if (!jumpEnabled || (!Gdx.input.isKeyPressed(Input.Keys.W) && !Gdx.input.isKeyPressed(Input.Keys.UP)))
+			if (!Gdx.input.isKeyPressed(Input.Keys.W) && !Gdx.input.isKeyPressed(Input.Keys.UP))
 				render.setAnimation(walkAnim);
 
 		physics.velocity.x += velX;
 	}
 
 	private void moveVertically() {
-		canJump = jumpEnabled && physics.isOnGround();
+		canJump = jumpCount < maxJumps && (jumpCount >= 1 || wasOnGroundRecently());
 
-		if (!physics.isOnGround())
+		if (!physics.isOnGround()) {
 			render.setSprite(jumpSprite);
+		} else {
+			jumpCount = 0;
+		}
 
-		boolean climbing = false;
+		boolean climbing = false, wasClimbing = false;
 
 		if (Gdx.input.isKeyPressed(Input.Keys.UP) || Gdx.input.isKeyPressed(Input.Keys.W)) {
 			if (map.onLadder(getCollisionBounds())) {
@@ -111,12 +125,15 @@ public class Player extends Entity {
 					bounds.y -= climbSpeed;
 					climbing = !climbing;
 				} else {
+					wasClimbing = true;
 					canJump = true;
 				}
 			}
 
-			if (canJump)
+			if (canJump && (wasClimbing || physics.isOnGround() || (KeyHandler.keyClicked(Input.Keys.UP) || KeyHandler.keyClicked(Input.Keys.W)))) {
 				physics.velocity.y += JUMP_SPEED;
+				jumpCount++;
+			}
 		}
 
 		if (Gdx.input.isKeyPressed(Input.Keys.DOWN) || Gdx.input.isKeyPressed(Input.Keys.S)) {
@@ -130,16 +147,26 @@ public class Player extends Entity {
 
 		if (map.onLadder(getCollisionBounds())) {
 			render.setAnimation(climbAnim);
+			jumpCount = 0;
+			
 			if (!climbing)
 				render.resetAnimation();
 		}
 	}
 	
+	private boolean wasOnGroundRecently() {
+		for (int i = 0; i < wasOnGround.length; i++)
+			if (wasOnGround [i])
+				return true;
+		
+		return false;
+	}
+
 	private void changeBasedOnConsoleVariables() {
 		physics.setGravity((Float)fields.get(0).getSelectedValue());
 		moveSpeed = (Float) fields.get(1).getSelectedValue();
 		climbSpeed = (Float) fields.get(2).getSelectedValue();
-		jumpEnabled = (Boolean) fields.get(3).getSelectedValue();
+		maxJumps = (Boolean) fields.get(3).getSelectedValue() ? 2 : 1;
 	}
 
 	public Rectangle getCollisionBounds() {
@@ -172,7 +199,7 @@ public class Player extends Entity {
 		fields.add(new ConsoleField<Float>("move_speed", speedOptions, 2));
 		fields.add(new ConsoleField<Float>("climb_speed", speedOptions, 2));
 		
-		fields.add(ConsoleField.createBooleanField("can_jump", true));
+		fields.add(ConsoleField.createBooleanField("double_jump", false));
 		
 		return fields;
 	}
@@ -195,7 +222,7 @@ public class Player extends Entity {
 		for (int i = 0; i < climbFrames.length; i++)
 			climbFrames[i] = splitTexture[2][i];
 
-		climbAnim = new Animation(10f, climbFrames);
+		climbAnim = new Animation(7f, climbFrames);
 		climbAnim.setPlayMode(PlayMode.LOOP);
 
 		jumpSprite = new Sprite(texture, 100, 77, 50, 77);

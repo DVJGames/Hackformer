@@ -58,7 +58,7 @@ public class PlatformWalk extends Component {
 		tileY = (int) (collisonBounds.y / Map.TILE_SIZE) - 1;
 
 		if (right)
-			tileX = (int) ((collisonBounds.x + collisonBounds.width) / Map.TILE_SIZE) - 1;
+			tileX = (int) ((collisonBounds.x + collisonBounds.width) / Map.TILE_SIZE);
 		else
 			tileX = (int) (collisonBounds.x / Map.TILE_SIZE);
 

@@ -14,6 +14,7 @@ public class Physics extends Component {
 
 	public Vector2 velocity = new Vector2();
 
+	private boolean yCollide = false;
 	private boolean onGround = false;
 	private boolean canClimb = false;
 	private boolean intersectsDarkPlatforms = true;
@@ -23,11 +24,11 @@ public class Physics extends Component {
 	public void update(Camera camera, float dt) {
 		super.update(camera, dt);
 
+		boolean onLadder = !yCollide && canClimb && parent.map.onLadder(parent.getCollisionBounds());
+
 		if (gravity != 0)
-			onGround = false;
-
-		boolean onLadder = canClimb && parent.map.onLadder(parent.getCollisionBounds());
-
+			onGround = yCollide = false;
+		
 		if (!onLadder)
 			velocity.y -= gravity * Math.max(1, (1 - (-velocity.y) / TERMINAL_VELOCITY)) * dt;
 
@@ -106,8 +107,11 @@ public class Physics extends Component {
 			parent.bounds.x += velocity.x;
 			parent.bounds.y += velocity.y;
 		} else if (velocity.y != 0) {
+			if (velocity.y < 0)
+				onGround = true;
+			
 			this.velocity.y = 0;
-			onGround = true;
+			yCollide = true;
 		}
 	}
 

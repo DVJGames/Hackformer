@@ -1,8 +1,8 @@
 package game.world;
 
-import com.badlogic.gdx.Gdx;
-
 import game.entity.Camera;
+
+import com.badlogic.gdx.Gdx;
 
 public abstract class Level {
 	

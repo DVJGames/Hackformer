@@ -17,7 +17,7 @@ public class Monster extends Entity implements Collidable {
 	public static ConsoleObject consoleObject;
 
 	private static Texture texture;
-	private static Animation walkAnim;
+	private static Animation walkAnim, deathAnim;
 	private static ArrayList<ConsoleField<?>> tempFields;
 
 	private PlatformWalk platformWalk;
@@ -31,7 +31,7 @@ public class Monster extends Entity implements Collidable {
 
 		addComponent(platformWalk = new PlatformWalk(walkAnim, 3f));
 		addComponent(new MouseConsole(fields));
-		
+
 		initConsoleObject();
 	}
 
@@ -50,7 +50,9 @@ public class Monster extends Entity implements Collidable {
 		if (e instanceof Player) {
 			Physics physics = e.getComponent(Physics.class);
 
-			if (physics.velocity.y < 0) {
+			Rectangle cBounds = getCollisionBounds();
+			
+			if (physics.velocity.y < 0 && e.bounds.y > cBounds.y + cBounds.height / 2) {
 				remove();
 				physics.velocity.y = Player.MONSTER_HEAD_BOUNCE;
 			} else if (hurtsPlayer)
@@ -60,6 +62,11 @@ public class Monster extends Entity implements Collidable {
 
 	public static void initConsoleObject() {
 		consoleObject = new ConsoleObject("obj_monster", tempFields);
+	}
+
+	public void remove() {
+		super.remove();
+		manager.addEntity(new Death(bounds, deathAnim));
 	}
 
 	private static ArrayList<ConsoleField<?>> initFields() {
@@ -83,6 +90,13 @@ public class Monster extends Entity implements Collidable {
 
 		walkAnim = new Animation(8f, walkFrames);
 		walkAnim.setPlayMode(PlayMode.LOOP);
+
+		TextureRegion[] deathFrames = new TextureRegion[7];
+
+		for (int i = 0; i < deathFrames.length; i++)
+			deathFrames[i] = splitTexture[3][i];
+
+		deathAnim = new Animation(3f, deathFrames);
 	}
 
 }

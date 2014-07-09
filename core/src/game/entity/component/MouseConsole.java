@@ -120,13 +120,22 @@ public class MouseConsole extends Component {
 		sr.rect(cBounds.x - camera.bounds.x + camera.bounds.width / 2, cBounds.y - camera.bounds.y + camera.bounds.height / 2, cBounds.width, cBounds.height);
 		sr.end();
 	}
-
+	
 	private void renderFields(SpriteBatch batch, Camera camera) {
 		Rectangle cBounds = parent.getCollisionBounds();
 
 		float x = cBounds.x + cBounds.width - camera.bounds.x + camera.bounds.width / 2;
 		float y = cBounds.y + cBounds.height + (fields.size() - 1) * FIELD_HEIGHT - camera.bounds.y + camera.bounds.height / 2;
-
+		
+		float width = FIELD_WIDTH + VALUE_WIDTH + 2 * (VALUE_X_OFFS + TRIANGLE_LENGTH);
+		float height = FIELD_HEIGHT * 2;
+		
+		if (x + width > camera.bounds.width)
+			x -= width + cBounds.width;
+		
+		if (y + height > camera.bounds.height)
+			y -= height + cBounds.height;
+		
 		Vector2 mousePos = new Vector2(Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY());
 
 		for (int i = 0; i < fields.size(); i++) {

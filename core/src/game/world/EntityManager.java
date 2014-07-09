@@ -26,7 +26,7 @@ public class EntityManager implements Disposable {
 
 		entities = new ArrayList<Entity>();
 		batch = new SpriteBatch();
-		
+
 		map.addEntities(this);
 	}
 
@@ -39,7 +39,7 @@ public class EntityManager implements Disposable {
 				return;
 			}
 		}
-		
+
 		if (mouseConsole != null && mouseConsole.isInConsoleMode()) {
 			mouseConsole.update(camera, dt);
 			return;
@@ -58,12 +58,12 @@ public class EntityManager implements Disposable {
 				if (c.isActive())
 					console = c;
 			}
-			
-			mouseConsole = entities.get(i).getComponent(MouseConsole.class);
 
-			if (mouseConsole != null && mouseConsole.isInConsoleMode())
-				return;
-			
+			MouseConsole mConsole = entities.get(i).getComponent(MouseConsole.class);
+
+			if (mConsole != null && mConsole.isInConsoleMode())
+				mouseConsole = mConsole;
+
 			entities.get(i).update(camera, dt);
 		}
 	}
@@ -90,7 +90,7 @@ public class EntityManager implements Disposable {
 
 		return result;
 	}
-	
+
 	public ArrayList<Entity> getEntitiesAtPoint(Vector2 point) {
 		ArrayList<Entity> result = new ArrayList<Entity>();
 
