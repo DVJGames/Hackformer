@@ -1,6 +1,7 @@
 package game.entity.component;
 
 import game.entity.Camera;
+import game.world.Game;
 import game.world.Map;
 
 import java.util.Random;
@@ -51,18 +52,19 @@ public class PlatformWalk extends Component {
 			moved = true;
 			move(1);
 		}
-
+		
 		Rectangle collisonBounds = parent.getCollisionBounds();
 		int tileX, tileY;
 
 		tileY = (int) (collisonBounds.y / Map.TILE_SIZE) - 1;
 
 		if (right)
-			tileX = (int) ((collisonBounds.x + collisonBounds.width) / Map.TILE_SIZE);
+			tileX = (int) ((collisonBounds.x + collisonBounds.width / 2 + speed * Game.MAX_DT) / Map.TILE_SIZE);
 		else
-			tileX = (int) (collisonBounds.x / Map.TILE_SIZE);
+			tileX = (int) ((collisonBounds.x - speed * Game.MAX_DT) / Map.TILE_SIZE);
 
-		if (!parent.map.platformAt(tileX, tileY) || parent.map.darkPlatformAt(tileX, tileY)) {
+		if (collisonBounds.x < speed * Game.MAX_DT || collisonBounds.x + collisonBounds.width / 2 + speed * Game.MAX_DT >= parent.map.getWidth() * Map.TILE_SIZE
+				|| (!parent.map.topPlatformAt(tileX, tileY) && !parent.map.darkPlatformAt(tileX, tileY) && !parent.map.bridgeTilesAt(tileX, tileY) && !parent.map.bridgeTilesAt(tileX - 1, tileY + 1))) {
 			right = !right;
 			move(2);
 		}

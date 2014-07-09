@@ -8,6 +8,8 @@ import com.badlogic.gdx.graphics.GL20;
 
 public class Game extends ApplicationAdapter {
 
+	public static final float MAX_DT = 2;
+	
 	private static Level level;
 	
 	private FPSLogger fpsLogger;
@@ -18,7 +20,7 @@ public class Game extends ApplicationAdapter {
 	}
 
 	public void render() {
-		updateWorld(Math.min(5, Gdx.graphics.getDeltaTime() * 60));
+		updateWorld(Math.min(MAX_DT, Gdx.graphics.getDeltaTime() * 60));
 		
 		Gdx.gl.glClearColor(77f / 255f, 77f / 255f, 77f / 255f, 1f);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);

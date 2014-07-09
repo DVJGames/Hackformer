@@ -14,73 +14,85 @@ public class Physics extends Component {
 
 	public Vector2 velocity = new Vector2();
 
+	private boolean bridgeCollide = false;
 	private boolean yCollide = false;
 	private boolean onGround = false;
 	private boolean canClimb = false;
 	private boolean intersectsDarkPlatforms = true;
 
-	private float gravity = DEFAULT_GRAVITY;
+	private float bridgeYVelChange = 5;
 
+	private float gravity = DEFAULT_GRAVITY;
+	
 	public void update(Camera camera, float dt) {
 		super.update(camera, dt);
-
+		
 		boolean onLadder = !yCollide && canClimb && parent.map.onLadder(parent.getCollisionBounds());
+		bridgeCollide = false;
 
 		if (gravity != 0)
 			onGround = yCollide = false;
-		
+
 		if (!onLadder)
 			velocity.y -= gravity * Math.max(1, (1 - (-velocity.y) / TERMINAL_VELOCITY)) * dt;
+
+		Rectangle cBounds = parent.getCollisionBounds();
+
+		int tileX = (int) ((cBounds.x + cBounds.width / 2) / Map.TILE_SIZE);
+		int tileY = (int) ((cBounds.y) / Map.TILE_SIZE);
+
+		if (intersectsDarkPlatforms)
+			if (parent.map.bridgeAt(tileX, tileY) || ((velocity.x > 0 && (parent.map.upLeftBridgeAt(tileX, tileY))) || (velocity.x < 0 && (parent.map.upRightBridgeAt(tileX, tileY)))))
+				parent.bounds.y += bridgeYVelChange;
 
 		if (velocity.y < -TERMINAL_VELOCITY)
 			velocity.y = -TERMINAL_VELOCITY;
 		if (velocity.y > TERMINAL_VELOCITY)
 			velocity.y = TERMINAL_VELOCITY;
 
-		move(velocity.cpy(), dt);
+		move(velocity.cpy().scl(dt));
 
 		if (onLadder)
 			velocity.y = 0;
-		
-		intersectsDarkPlatforms = true;
-	}
 
+		if (!bridgeCollide)
+			intersectsDarkPlatforms = true;
+	}
+	
 	public boolean isOnGround() {
 		return onGround;
 	}
 
-	private void move(Vector2 velocity, float dt) {
+	private void move(Vector2 velocity) {
 		if (velocity.x != 0 && velocity.y != 0) {
-			move(new Vector2(velocity.x, 0), dt);
-			move(new Vector2(0, velocity.y), dt);
+			move(new Vector2(velocity.x, 0));
+			move(new Vector2(0, velocity.y));
 			return;
 		}
 
 		if (velocity.x > MIN_STEP) {
-			move(new Vector2(MIN_STEP, 0), dt);
-			move(new Vector2(velocity.x - MIN_STEP, 0), dt);
+			move(new Vector2(MIN_STEP, 0));
+			move(new Vector2(velocity.x - MIN_STEP, 0));
 			return;
 		}
 
 		if (velocity.x < -MIN_STEP) {
-			move(new Vector2(-MIN_STEP, 0), dt);
-			move(new Vector2(velocity.x + MIN_STEP, 0), dt);
+			move(new Vector2(-MIN_STEP, 0));
+			move(new Vector2(velocity.x + MIN_STEP, 0));
 			return;
 		}
 
 		if (velocity.y > MIN_STEP) {
-			move(new Vector2(0, MIN_STEP), dt);
-			move(new Vector2(0, velocity.y - MIN_STEP), dt);
+			move(new Vector2(0, MIN_STEP));
+			move(new Vector2(0, velocity.y - MIN_STEP));
 			return;
 		}
 
 		if (velocity.y < -MIN_STEP) {
-			move(new Vector2(0, -MIN_STEP), dt);
-			move(new Vector2(0, velocity.y + MIN_STEP), dt);
+			move(new Vector2(0, -MIN_STEP));
+			move(new Vector2(0, velocity.y + MIN_STEP));
 			return;
 		}
-
-		velocity.scl(dt);
 
 		boolean solid = false;
 		Rectangle collisionBounds = parent.getCollisionBounds();
@@ -90,16 +102,25 @@ public class Physics extends Component {
 		float width = collisionBounds.width;
 		float height = collisionBounds.height;
 
-		Outer: for (float xPos = x; xPos <= x + width; xPos += MIN_STEP) {
+		for (float xPos = x; xPos <= x + width; xPos += MIN_STEP) {
 
-			if (velocity.y < 0 && intersectsDarkPlatforms) 
-				solid |= parent.map.darkPlatformAt((int) (xPos / Map.TILE_SIZE), (int) (y / Map.TILE_SIZE)) && !parent.map.darkPlatformAt((int) (xPos / Map.TILE_SIZE), (int) ((y + MIN_STEP) / Map.TILE_SIZE));
+			int tileX = (int) (xPos / Map.TILE_SIZE);
+			int tileY = (int) (y / Map.TILE_SIZE);
+
+			if (velocity.y < 0 && intersectsDarkPlatforms)
+				solid |= parent.map.darkPlatformAt(tileX, tileY) && !parent.map.darkPlatformAt(tileX, (int) ((y + MIN_STEP) / Map.TILE_SIZE));
 
 			for (float yPos = y; yPos <= y + height; yPos += MIN_STEP) {
-				if (solid)
-					break Outer;
+				tileY = (int) (yPos / Map.TILE_SIZE);
 
-				solid |= parent.map.platformAt((int) (xPos / Map.TILE_SIZE), (int) (yPos / Map.TILE_SIZE));
+				solid |= parent.map.platformAt(tileX, tileY);
+
+				if (velocity.y < 0 && parent.map.bridgeAt(tileX, tileY)) {
+					bridgeCollide = true;
+
+					if (intersectsDarkPlatforms)
+						solid = true;
+				}
 			}
 		}
 
@@ -109,7 +130,7 @@ public class Physics extends Component {
 		} else if (velocity.y != 0) {
 			if (velocity.y < 0)
 				onGround = true;
-			
+
 			this.velocity.y = 0;
 			yCollide = true;
 		}
@@ -122,7 +143,7 @@ public class Physics extends Component {
 	public void setGravity(float gravity) {
 		this.gravity = gravity;
 	}
-	
+
 	public void flickerDarkPlatformIntersection() {
 		intersectsDarkPlatforms = false;
 	}

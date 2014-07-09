@@ -26,6 +26,7 @@ public class Map implements Disposable {
 	private TiledMapTileLayer platformLayer;
 	private TiledMapTileLayer darkPlatformLayer;
 	private TiledMapTileLayer ladderLayer;
+	private TiledMapTileLayer bridgeLayer;
 
 	public Map(String tmxPath) {
 		tiledMap = new TmxMapLoader().load("maps/" + tmxPath);
@@ -34,6 +35,7 @@ public class Map implements Disposable {
 		platformLayer = (TiledMapTileLayer) tiledMap.getLayers().get("platforms");
 		darkPlatformLayer = (TiledMapTileLayer) tiledMap.getLayers().get("dark platforms");
 		ladderLayer = (TiledMapTileLayer) tiledMap.getLayers().get("ladders");
+		bridgeLayer = (TiledMapTileLayer) tiledMap.getLayers().get("bridges");
 	}
 
 	public void render(Camera camera) {
@@ -49,15 +51,72 @@ public class Map implements Disposable {
 	}
 
 	public boolean platformAt(int x, int y) {
+		if (outOfBounds(x, y))
+			return false;
+
 		return platformLayer.getCell(x, y) != null;
+	}
+	
+	public boolean topPlatformAt(int x, int y) {
+		return platformAt(x, y) && !platformAt(x, y + 1);
 	}
 
 	public boolean darkPlatformAt(int x, int y) {
+		if (outOfBounds(x, y))
+			return false;
+
 		return darkPlatformLayer.getCell(x, y) != null && darkPlatformLayer.getCell(x, y + 1) == null;
 	}
 
+	private boolean actuallyDarkPlatform(int x, int y) {
+		if (outOfBounds(x, y))
+			return false;
+
+		return darkPlatformLayer.getCell(x, y) != null;
+	}
+
 	public boolean ladderAt(int x, int y) {
+		if (outOfBounds(x, y))
+			return false;
+
 		return ladderLayer.getCell(x, y) != null;
+	}
+
+	public boolean upRightBridgeAt(int x, int y) {
+		return isRightUp(x, y) || isRightUp(x - 1, y) || isRightUp(x, y - 1);
+	}
+
+	private boolean isRightUp(int x, int y) {
+		if (!bridgeAt(x, y) && !bridgeAt(x - 1, y) && !bridgeAt(x + 1, y - 1))
+			return false;
+
+		return (bridgeAt(x - 1, y) && bridgeAt(x - 1, y + 1)) || platformAt(x - 1, y) || actuallyDarkPlatform(x - 1, y);
+	}
+
+	public boolean upLeftBridgeAt(int x, int y) {
+		return isLeftUp(x, y) || isLeftUp(x + 1, y) || isLeftUp(x, y - 1);
+	}
+
+	private boolean isLeftUp(int x, int y) {
+		if (!bridgeAt(x, y) && !bridgeAt(x + 1, y) && !bridgeAt(x - 1, y - 1))
+			return false;
+
+		return (bridgeAt(x + 1, y) && bridgeAt(x + 1, y + 1)) || platformAt(x + 1, y) || actuallyDarkPlatform(x + 1, y);
+	}
+
+	public boolean bridgeAt(int x, int y) {
+		return isBridge(x, y) || ((isBridge(x + 1, y) || isBridge(x - 1, y)) && isBridge(x, y + 1));
+	}
+
+	public boolean bridgeTilesAt(int x, int y) {
+		return bridgeLayer.getCell(x, y) != null;
+	}
+
+	private boolean isBridge(int x, int y) {
+		if (outOfBounds(x, y))
+			return false;
+
+		return bridgeLayer.getCell(x, y) != null && (bridgeLayer.getCell(x, y - 1) == null || platformAt(x - 1, y) || actuallyDarkPlatform(x - 1, y) || platformAt(x + 1, y) || actuallyDarkPlatform(x + 1, y)) && !platformAt(x, y - 1) && !actuallyDarkPlatform(x, y - 1);
 	}
 
 	public int getWidth() {
