@@ -8,12 +8,16 @@ import game.world.Game;
 
 public class HtmlLauncher extends GwtApplication {
 
-        @Override
         public GwtApplicationConfiguration getConfig () {
-                return new GwtApplicationConfiguration(480, 320);
+        		GwtApplicationConfiguration config = new GwtApplicationConfiguration(800, 704);
+        	
+        		config.antialiasing = true;
+        		config.fps = 60;
+        		config.stencil = false;
+        		
+                return config;
         }
 
-        @Override
         public ApplicationListener getApplicationListener () {
                 return new Game();
         }

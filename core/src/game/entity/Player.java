@@ -1,11 +1,12 @@
 package game.entity;
 
-import java.util.ArrayList;
-
 import game.entity.component.Collider;
+import game.entity.component.MouseConsole;
 import game.entity.component.Physics;
 import game.entity.component.Render;
 import game.world.KeyHandler;
+
+import java.util.ArrayList;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -19,6 +20,7 @@ import com.badlogic.gdx.math.Rectangle;
 public class Player extends Entity {
 
 	public static ConsoleObject consoleObject;
+	private static ArrayList<ConsoleField<?>> tempFields;
 
 	private static final Texture texture = new Texture("textures/ninja.png");
 	private static Animation walkAnim, climbAnim;
@@ -29,6 +31,7 @@ public class Player extends Entity {
 
 	private Render render;
 	private Physics physics;
+	private ArrayList<ConsoleField<?>> fields;
 	
 	private boolean left = false, right = false, canJump = true, jumpEnabled = true;
 	private float moveSpeed;
@@ -37,18 +40,25 @@ public class Player extends Entity {
 	public Player(float x, float y) {
 		super(new Rectangle(x, y, 30, 46.2f));
 
+		tempFields = fields = initFields();
+		
 		addComponent(render = new Render(climbAnim));
 		addComponent(physics = new Physics());
 		addComponent(new Collider());
+		addComponent(new MouseConsole(fields));
 
 		physics.setCanClimb(true);
+		
+		initConsoleObject();
 	}
 
 	public void update(Camera camera, float dt) {
 		super.update(camera, dt);
 
 		camera.centerAt(bounds.x, bounds.y);
-		render.setSprite(standSprite);
+		
+		if (!jumpEnabled || (!Gdx.input.isKeyPressed(Input.Keys.W) && !Gdx.input.isKeyPressed(Input.Keys.UP)))
+			render.setSprite(standSprite);
 
 		moveHorizontally();
 		moveVertically();
@@ -78,7 +88,8 @@ public class Player extends Entity {
 		}
 
 		if (left || right)
-			render.setAnimation(walkAnim);
+			if (!jumpEnabled || (!Gdx.input.isKeyPressed(Input.Keys.W) && !Gdx.input.isKeyPressed(Input.Keys.UP)))
+				render.setAnimation(walkAnim);
 
 		physics.velocity.x += velX;
 	}
@@ -125,17 +136,21 @@ public class Player extends Entity {
 	}
 	
 	private void changeBasedOnConsoleVariables() {
-		physics.setGravity((Float)consoleObject.fields.get(0).getSelectedValue());
-		moveSpeed = (Float) consoleObject.fields.get(1).getSelectedValue();
-		climbSpeed = (Float) consoleObject.fields.get(2).getSelectedValue();
-		jumpEnabled = (Boolean) consoleObject.fields.get(3).getSelectedValue();
+		physics.setGravity((Float)fields.get(0).getSelectedValue());
+		moveSpeed = (Float) fields.get(1).getSelectedValue();
+		climbSpeed = (Float) fields.get(2).getSelectedValue();
+		jumpEnabled = (Boolean) fields.get(3).getSelectedValue();
 	}
 
 	public Rectangle getCollisionBounds() {
-		return new Rectangle(bounds.x + 8, bounds.y, bounds.width - 8, bounds.height - 7);
+		return new Rectangle(bounds.x + 4, bounds.y, bounds.width - 8, bounds.height - 7);
 	}
 
 	public static void initConsoleObject() {
+		consoleObject = new ConsoleObject("obj_player", tempFields);
+	}
+	
+	private static ArrayList<ConsoleField<?>> initFields() {
 		ArrayList<ConsoleField<?>> fields = new ArrayList<ConsoleField<?>>();
 
 		ArrayList<Float> gravityOptions = new ArrayList<Float>();
@@ -159,10 +174,7 @@ public class Player extends Entity {
 		
 		fields.add(ConsoleField.createBooleanField("can_jump", true));
 		
-		for (int i = 0; i < 5; i++)
-			fields.add(ConsoleField.createBooleanField("unused field", true));
-		
-		consoleObject = new ConsoleObject("obj_player", fields);
+		return fields;
 	}
 
 	static {

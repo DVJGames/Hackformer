@@ -3,6 +3,7 @@ package game.world;
 import game.entity.Camera;
 import game.entity.Console;
 import game.entity.Entity;
+import game.entity.component.MouseConsole;
 
 import java.util.ArrayList;
 
@@ -17,6 +18,7 @@ public class EntityManager implements Disposable {
 	private Map map;
 	private SpriteBatch batch;
 
+	private MouseConsole mouseConsole;
 	private Console console;
 
 	public EntityManager(Map map) {
@@ -37,6 +39,11 @@ public class EntityManager implements Disposable {
 				return;
 			}
 		}
+		
+		if (mouseConsole != null && mouseConsole.isInConsoleMode()) {
+			mouseConsole.update(camera, dt);
+			return;
+		}
 
 		for (int i = 0; i < entities.size(); i++) {
 
@@ -51,7 +58,12 @@ public class EntityManager implements Disposable {
 				if (c.isActive())
 					console = c;
 			}
+			
+			mouseConsole = entities.get(i).getComponent(MouseConsole.class);
 
+			if (mouseConsole != null && mouseConsole.isInConsoleMode())
+				return;
+			
 			entities.get(i).update(camera, dt);
 		}
 	}
@@ -74,6 +86,16 @@ public class EntityManager implements Disposable {
 
 		for (int i = 0; i < entities.size(); i++)
 			if (entities.get(i).getCollisionBounds().overlaps(area))
+				result.add(entities.get(i));
+
+		return result;
+	}
+	
+	public ArrayList<Entity> getEntitiesAtPoint(Vector2 point) {
+		ArrayList<Entity> result = new ArrayList<Entity>();
+
+		for (int i = 0; i < entities.size(); i++)
+			if (entities.get(i).getCollisionBounds().contains(point))
 				result.add(entities.get(i));
 
 		return result;

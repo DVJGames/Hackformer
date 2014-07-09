@@ -22,13 +22,8 @@ public class TestLevel extends Level {
 		
 		manager.addEntity(console = new Console(camera));
 		
-		Player.initConsoleObject();
 		console.addObject(Player.consoleObject);
-		
-		Camera.initConsoleObject();
 		console.addObject(Camera.consoleObject);
-		
-		Monster.initConsoleObject();
 		console.addObject(Monster.consoleObject);
 		
 		ArrayList<ConsoleField<?>> wallFields = new ArrayList<ConsoleField<?>>();

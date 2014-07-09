@@ -100,5 +100,9 @@ public class Camera extends Entity {
 
 		consoleObject = new ConsoleObject("obj_camera", fields);
 	}
+	
+	static {
+		initConsoleObject();
+	}
 
 }
