@@ -16,7 +16,7 @@ public class Game extends ApplicationAdapter {
 	
 	public void create() {
 		fpsLogger = new FPSLogger();
-		setLevel(new TestLevel());
+		setLevel(LevelFactory.getNextLevel());
 	}
 
 	public void render() {

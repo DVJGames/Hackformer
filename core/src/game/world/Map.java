@@ -1,6 +1,7 @@
 package game.world;
 
 import game.entity.Camera;
+import game.entity.Door;
 import game.entity.Entity;
 import game.entity.Monster;
 import game.entity.Player;
@@ -41,6 +42,20 @@ public class Map implements Disposable {
 	public void render(Camera camera) {
 		camera.projectMap(renderer);
 		renderer.render();
+//		
+//		ShapeRenderer sr = new ShapeRenderer();
+//		
+//		Gdx.gl20.glLineWidth(1);
+//		
+//		sr.begin(ShapeType.Line);
+//		sr.setColor(0, 0, 0, 0);
+//		
+//		for (int i = 0; i < getWidth(); i++)
+//			for (int j = 0; j < getHeight(); j++)
+//				if (bridgeTilesAt(i, j) || darkPlatformAt(i, j) || topPlatformAt(i, j))
+//					sr.rect(i * TILE_SIZE - camera.bounds.x + camera.bounds.width / 2, j * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+//		
+//		sr.end();
 	}
 
 	public boolean onLadder(Rectangle bounds) {
@@ -62,9 +77,13 @@ public class Map implements Disposable {
 	}
 
 	public boolean darkPlatformAt(int x, int y) {
+		return darkPlatformAt(x, y, false);
+	}
+	
+	public boolean darkPlatformAt(int x, int y, boolean flippedGravity) {
 		if (outOfBounds(x, y))
 			return false;
-
+		
 		return darkPlatformLayer.getCell(x, y) != null && darkPlatformLayer.getCell(x, y + 1) == null;
 	}
 
@@ -173,6 +192,8 @@ public class Map implements Disposable {
 			e = new Player(x, y);
 		else if (name.equals("spike"))
 			e = new Spike(x, y);
+		else if (name.equals("door"))
+			e = new Door(x, y);
 
 		return e;
 	}

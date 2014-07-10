@@ -1,6 +1,7 @@
 package game.entity.component;
 
 import game.entity.Camera;
+import game.entity.Player;
 import game.world.Map;
 
 import com.badlogic.gdx.math.Rectangle;
@@ -11,6 +12,7 @@ public class Physics extends Component {
 	private static final float DEFAULT_GRAVITY = 0.5f;
 	private static final float TERMINAL_VELOCITY = 12f;
 	private static final float MIN_STEP = 1;
+	private static final float LADDER_NUDGE = 1;
 
 	public Vector2 velocity = new Vector2();
 
@@ -23,7 +25,7 @@ public class Physics extends Component {
 	private float bridgeYVelChange = 5;
 
 	private float gravity = DEFAULT_GRAVITY;
-	
+
 	public void update(Camera camera, float dt) {
 		super.update(camera, dt);
 		
@@ -42,8 +44,8 @@ public class Physics extends Component {
 		int tileY = (int) ((cBounds.y) / Map.TILE_SIZE);
 
 		if (intersectsDarkPlatforms)
-			if (parent.map.bridgeAt(tileX, tileY) || ((velocity.x > 0 && (parent.map.upLeftBridgeAt(tileX, tileY))) || (velocity.x < 0 && (parent.map.upRightBridgeAt(tileX, tileY)))))
-				parent.bounds.y += bridgeYVelChange;
+			if (parent.map.bridgeAt(tileX, tileY) || ((velocity.x > 0 && (parent.map.upLeftBridgeAt(tileX, tileY))) || (velocity.y > 0 && (parent.map.upRightBridgeAt(tileX, tileY)) || (velocity.y < 0 && (parent.map.upLeftBridgeAt(tileX, tileY))))))
+				parent.bounds.y += bridgeYVelChange * dt;
 
 		if (velocity.y < -TERMINAL_VELOCITY)
 			velocity.y = -TERMINAL_VELOCITY;
@@ -57,8 +59,11 @@ public class Physics extends Component {
 
 		if (!bridgeCollide)
 			intersectsDarkPlatforms = true;
+		
+		if (parent instanceof Player)
+			System.out.println(yCollide + ", " + bridgeCollide + ", " + parent.map.bridgeAt(tileX, tileY));
 	}
-	
+
 	public boolean isOnGround() {
 		return onGround;
 	}
@@ -101,14 +106,17 @@ public class Physics extends Component {
 		float y = collisionBounds.y + velocity.y;
 		float width = collisionBounds.width;
 		float height = collisionBounds.height;
+		
+		if (x + width < 0 || x >= parent.map.getWidth() * Map.TILE_SIZE)
+			return;
 
 		for (float xPos = x; xPos <= x + width; xPos += MIN_STEP) {
 
 			int tileX = (int) (xPos / Map.TILE_SIZE);
 			int tileY = (int) (y / Map.TILE_SIZE);
 
-			if (velocity.y < 0 && intersectsDarkPlatforms)
-				solid |= parent.map.darkPlatformAt(tileX, tileY) && !parent.map.darkPlatformAt(tileX, (int) ((y + MIN_STEP) / Map.TILE_SIZE));
+				if (intersectsDarkPlatforms && velocity.y < 0 && gravity > 0)
+					solid |= parent.map.darkPlatformAt(tileX, tileY) && !parent.map.darkPlatformAt(tileX, (int) ((y + MIN_STEP) / Map.TILE_SIZE));
 
 			for (float yPos = y; yPos <= y + height; yPos += MIN_STEP) {
 				tileY = (int) (yPos / Map.TILE_SIZE);
@@ -121,6 +129,9 @@ public class Physics extends Component {
 					if (intersectsDarkPlatforms)
 						solid = true;
 				}
+				
+				if (velocity.y > 0 && gravity <= 0) 
+					solid |= parent.map.darkPlatformAt(tileX, tileY, true) && !parent.map.darkPlatformAt(tileX, (int) ((y + MIN_STEP) / Map.TILE_SIZE));
 			}
 		}
 
@@ -128,8 +139,26 @@ public class Physics extends Component {
 			parent.bounds.x += velocity.x;
 			parent.bounds.y += velocity.y;
 		} else if (velocity.y != 0) {
-			if (velocity.y < 0)
+			if (velocity.y < 0) {
 				onGround = true;
+			} else {
+				if (parent.map.onLadder(collisionBounds)) {
+					boolean nudgeRight = true;
+					
+					for (float i = 0; i < Map.TILE_SIZE; i += MIN_STEP) {
+						collisionBounds.x = x + i;
+						
+						if (!parent.map.onLadder(collisionBounds)) {
+							nudgeRight = false;
+							break;
+						}
+					}
+					
+					if (nudgeRight)
+						parent.bounds.x += LADDER_NUDGE;
+					else parent.bounds.x -= LADDER_NUDGE;
+				}
+			}
 
 			this.velocity.y = 0;
 			yCollide = true;

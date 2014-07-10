@@ -32,26 +32,30 @@ public class Player extends Entity {
 	private Render render;
 	private Physics physics;
 	private ArrayList<ConsoleField<?>> fields;
-	
+
 	private boolean[] wasOnGround = new boolean[10];
 	private boolean left = false, right = false, canJump = true;
 	private float moveSpeed;
 	private float climbSpeed;
-	
+	private float moveVelocity = 0;
+	private float moveAccelerationFraction = 40f;
+	private float initialMoveSpeed = 3f;
+	private float friction = 0.8f;
+
 	private int jumpCount = 0, maxJumps = 1;
 
 	public Player(float x, float y) {
 		super(new Rectangle(x, y, 30, 46.2f));
 
 		tempFields = fields = initFields();
-		
+
 		addComponent(render = new Render(climbAnim));
 		addComponent(physics = new Physics());
 		addComponent(new Collider());
 		addComponent(new MouseConsole(fields));
 
 		physics.setCanClimb(true);
-		
+
 		initConsoleObject();
 	}
 
@@ -59,7 +63,7 @@ public class Player extends Entity {
 		super.update(camera, dt);
 
 		camera.centerAt(bounds.x, bounds.y);
-		
+
 		if (!(Gdx.input.isKeyPressed(Input.Keys.W) || Gdx.input.isKeyPressed(Input.Keys.UP)))
 			render.setSprite(standSprite);
 
@@ -71,7 +75,7 @@ public class Player extends Entity {
 
 	private void checkOnGround() {
 		wasOnGround[wasOnGround.length - 1] = physics.isOnGround();
-		
+
 		for (int i = 0; i < wasOnGround.length - 1; i++)
 			wasOnGround[i] = wasOnGround[i + 1];
 	}
@@ -79,22 +83,21 @@ public class Player extends Entity {
 	private void moveHorizontally() {
 		float velX = 0;
 
-		if (left)
-			velX += moveSpeed;
-
-		if (right)
-			velX -= moveSpeed;
+		if (!left && !right) {
+			physics.velocity.x -= moveVelocity;
+			moveVelocity = 0;
+		}
 
 		left = Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A);
 		right = Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D);
 
-		if (left) {
-			velX -= moveSpeed;
+		if (left && moveVelocity > -moveSpeed) {
+			move(-moveSpeed / moveAccelerationFraction);
 			render.setFlip(true);
 		}
 
-		if (right) {
-			velX += moveSpeed;
+		if (right && moveVelocity < moveSpeed) {
+			move(moveSpeed / moveAccelerationFraction);
 			render.setFlip(false);
 		}
 
@@ -103,6 +106,23 @@ public class Player extends Entity {
 				render.setAnimation(walkAnim);
 
 		physics.velocity.x += velX;
+	}
+
+	private void move(float amt) {
+		if (moveVelocity == 0) {
+			if (amt < 0)
+				amt = -initialMoveSpeed;
+			else
+				amt = initialMoveSpeed;
+		}
+		
+		if (amt > 0 && moveVelocity < 0)
+			amt += Math.min(friction, -moveVelocity);
+		else if (amt < 0 && moveVelocity > 0)
+			amt -= Math.min(friction, moveVelocity);
+
+		moveVelocity += amt;
+		physics.velocity.x += amt;
 	}
 
 	private void moveVertically() {
@@ -140,7 +160,7 @@ public class Player extends Entity {
 			if (map.onLadder(getCollisionBounds())) {
 				physics.velocity.y -= climbSpeed;
 				climbing = !climbing;
-			} else if (KeyHandler.keyClicked(Input.Keys.DOWN) || KeyHandler.keyClicked(Input.Keys.S)){
+			} else if (KeyHandler.keyClicked(Input.Keys.DOWN) || KeyHandler.keyClicked(Input.Keys.S)) {
 				physics.flickerDarkPlatformIntersection();
 			}
 		}
@@ -148,35 +168,35 @@ public class Player extends Entity {
 		if (map.onLadder(getCollisionBounds())) {
 			render.setAnimation(climbAnim);
 			jumpCount = 0;
-			
+
 			if (!climbing)
 				render.resetAnimation();
 		}
 	}
-	
+
 	private boolean wasOnGroundRecently() {
 		for (int i = 0; i < wasOnGround.length; i++)
-			if (wasOnGround [i])
+			if (wasOnGround[i])
 				return true;
-		
+
 		return false;
 	}
 
 	private void changeBasedOnConsoleVariables() {
-		physics.setGravity((Float)fields.get(0).getSelectedValue());
+		physics.setGravity((Float) fields.get(0).getSelectedValue());
 		moveSpeed = (Float) fields.get(1).getSelectedValue();
 		climbSpeed = (Float) fields.get(2).getSelectedValue();
 		maxJumps = (Boolean) fields.get(3).getSelectedValue() ? 2 : 1;
 	}
 
 	public Rectangle getCollisionBounds() {
-		return new Rectangle(bounds.x + 4, bounds.y, bounds.width - 8, bounds.height - 7);
+		return new Rectangle(bounds.x + 4, bounds.y, bounds.width - 8, bounds.height - 5);
 	}
 
 	public static void initConsoleObject() {
 		consoleObject = new ConsoleObject("obj_player", tempFields);
 	}
-	
+
 	private static ArrayList<ConsoleField<?>> initFields() {
 		ArrayList<ConsoleField<?>> fields = new ArrayList<ConsoleField<?>>();
 
@@ -188,19 +208,19 @@ public class Player extends Entity {
 		gravityOptions.add(1f);
 
 		fields.add(new ConsoleField<Float>("gravity", gravityOptions, 3));
-		
+
 		ArrayList<Float> speedOptions = new ArrayList<Float>();
-		speedOptions.add(1f);
-		speedOptions.add(3f);
-		speedOptions.add(5f);
-		speedOptions.add(7f);
-		speedOptions.add(9f);
-		
+		speedOptions.add(2f);
+		speedOptions.add(4f);
+		speedOptions.add(6f);
+		speedOptions.add(8f);
+		speedOptions.add(10f);
+
 		fields.add(new ConsoleField<Float>("move_speed", speedOptions, 2));
 		fields.add(new ConsoleField<Float>("climb_speed", speedOptions, 2));
-		
+
 		fields.add(ConsoleField.createBooleanField("double_jump", false));
-		
+
 		return fields;
 	}
 
