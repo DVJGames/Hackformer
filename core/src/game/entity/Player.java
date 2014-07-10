@@ -4,6 +4,7 @@ import game.entity.component.Collider;
 import game.entity.component.MouseConsole;
 import game.entity.component.Physics;
 import game.entity.component.Render;
+import game.world.Game;
 import game.world.KeyHandler;
 
 import java.util.ArrayList;
@@ -21,10 +22,13 @@ public class Player extends Entity {
 
 	public static ConsoleObject consoleObject;
 	private static ArrayList<ConsoleField<?>> tempFields;
+	
+	public static final float WIDTH = 30, HEIGHT = 46.2f;
 
 	private static final Texture texture = new Texture("textures/ninja.png");
 	private static Animation walkAnim, climbAnim;
-	private static Sprite standSprite, jumpSprite;
+	public static Sprite standSprite;
+	private static Sprite jumpSprite;
 
 	private static final float JUMP_SPEED = 12;
 	public static final float MONSTER_HEAD_BOUNCE = 12;
@@ -45,7 +49,7 @@ public class Player extends Entity {
 	private int jumpCount = 0, maxJumps = 1;
 
 	public Player(float x, float y) {
-		super(new Rectangle(x, y, 30, 46.2f));
+		super(new Rectangle(x, y, WIDTH, HEIGHT));
 
 		tempFields = fields = initFields();
 
@@ -71,6 +75,9 @@ public class Player extends Entity {
 		moveHorizontally();
 		moveVertically();
 		changeBasedOnConsoleVariables();
+
+		if (bounds.y < -bounds.height)
+			remove();
 	}
 
 	private void checkOnGround() {
@@ -191,6 +198,11 @@ public class Player extends Entity {
 
 	public Rectangle getCollisionBounds() {
 		return new Rectangle(bounds.x + 4, bounds.y, bounds.width - 8, bounds.height - 5);
+	}
+	
+	public void remove() {
+		super.remove();
+		Game.restartLevel();
 	}
 
 	public static void initConsoleObject() {

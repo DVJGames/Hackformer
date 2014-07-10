@@ -1,7 +1,6 @@
 package game.entity.component;
 
 import game.entity.Camera;
-import game.entity.Player;
 import game.world.Map;
 
 import com.badlogic.gdx.math.Rectangle;
@@ -59,9 +58,6 @@ public class Physics extends Component {
 
 		if (!bridgeCollide)
 			intersectsDarkPlatforms = true;
-		
-		if (parent instanceof Player)
-			System.out.println(yCollide + ", " + bridgeCollide + ", " + parent.map.bridgeAt(tileX, tileY));
 	}
 
 	public boolean isOnGround() {

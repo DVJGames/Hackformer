@@ -30,6 +30,9 @@ public abstract class Component implements Disposable {
 	public void update(Camera camera, float dt) {
 	}
 
+	public void renderEarly(Camera camera, SpriteBatch batch) {
+	}
+	
 	public void render(Camera camera, SpriteBatch batch) {
 	}
 

@@ -13,7 +13,7 @@ public class Door extends Entity implements Collidable {
 	private static Texture texture = new Texture("textures/door.png");
 	
 	public Door(float x, float y) {
-		super(new Rectangle(x, y, 48, 64));
+		super(new Rectangle(x - 8, y, 48, 64));
 		addComponent(new Render(new Sprite(texture)));
 	}
 

@@ -32,11 +32,22 @@ public class Map implements Disposable {
 	public Map(String tmxPath) {
 		tiledMap = new TmxMapLoader().load("maps/" + tmxPath);
 		renderer = new OrthogonalTiledMapRenderer(tiledMap);
-
+		
 		platformLayer = (TiledMapTileLayer) tiledMap.getLayers().get("platforms");
 		darkPlatformLayer = (TiledMapTileLayer) tiledMap.getLayers().get("dark platforms");
 		ladderLayer = (TiledMapTileLayer) tiledMap.getLayers().get("ladders");
 		bridgeLayer = (TiledMapTileLayer) tiledMap.getLayers().get("bridges");
+		
+		if (darkPlatformLayer == null)
+			darkPlatformLayer = createDefaultLayer();
+		if (ladderLayer == null)
+			ladderLayer = createDefaultLayer();
+		if (bridgeLayer == null)
+			bridgeLayer = createDefaultLayer();
+	}
+	
+	private TiledMapTileLayer createDefaultLayer() {
+		return new TiledMapTileLayer(getWidth(), getHeight(), (int)TILE_SIZE, (int)TILE_SIZE);
 	}
 
 	public void render(Camera camera) {

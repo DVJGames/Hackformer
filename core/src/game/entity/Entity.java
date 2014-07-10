@@ -34,6 +34,12 @@ public abstract class Entity implements Disposable {
 			components.get(i).update(camera, dt);
 		}
 	}
+
+	public void renderEarly(Camera camera, SpriteBatch batch) {
+		for (int i = 0; i < components.size(); i++) 
+			if (components.get(i).isInitialized()) 
+				components.get(i).renderEarly(camera, batch);
+	}
 	
 	public void render(Camera camera, SpriteBatch batch) {
 		for (int i = 0; i < components.size(); i++) 

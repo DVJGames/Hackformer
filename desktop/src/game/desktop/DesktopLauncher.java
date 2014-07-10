@@ -13,8 +13,8 @@ public class DesktopLauncher {
 		
 		config.x = -1;
 		config.y = -1;
-		config.width = 800;
-		config.height = 704;
+		config.width = 768;
+		config.height = 512;
 		config.resizable = false;
 		
 		config.backgroundFPS = -1;

@@ -3,6 +3,7 @@ package game.world;
 import game.entity.Camera;
 import game.entity.Console;
 import game.entity.Entity;
+import game.entity.Player;
 import game.entity.component.MouseConsole;
 
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ public class EntityManager implements Disposable {
 
 	private MouseConsole mouseConsole;
 	private Console console;
+	private boolean finished = false;
 
 	public EntityManager(Map map) {
 		this.map = map;
@@ -31,6 +33,9 @@ public class EntityManager implements Disposable {
 	}
 
 	public void update(Camera camera, float dt) {
+		if (finished)
+			return;
+		
 		if (console != null) {
 			if (!console.isActive())
 				console = null;
@@ -46,7 +51,9 @@ public class EntityManager implements Disposable {
 		}
 
 		for (int i = 0; i < entities.size(); i++) {
-
+			if (finished)
+				return;
+			
 			if (entities.get(i).isRemoved()) {
 				entities.remove(i--);
 				continue;
@@ -69,16 +76,26 @@ public class EntityManager implements Disposable {
 	}
 
 	public void render(Camera camera) {
+		if (finished)
+			return;
+		
 		camera.projectBatch(batch);
 
 		for (int i = 0; i < entities.size(); i++)
+			entities.get(i).renderEarly(camera, batch);
+		
+		for (int i = 0; i < entities.size(); i++)
 			entities.get(i).render(camera, batch);
 	}
-
+	
 	public void addEntity(Entity e) {
 		entities.add(e);
 		e.setManager(this);
 		e.setMap(map);
+	}
+	
+	public void finish() {
+		finished = true;
 	}
 
 	public ArrayList<Entity> getEntitiesWithinArea(Rectangle area) {
@@ -124,6 +141,20 @@ public class EntityManager implements Disposable {
 	public void dispose() {
 		for (int i = 0; i < entities.size(); i++)
 			entities.get(i).dispose();
+	}
+
+	public Player getPlayer() {
+		for (int i = 0; i < entities.size(); i++)
+			if (entities.get(i) instanceof Player)
+				return (Player) entities.get(i);
+		
+		return null;
+	}
+
+	public void remove(Entity e) {
+		for (int i = 0; i < entities.size(); i++)
+			if (entities.get(i) == e)
+				entities.remove(i--);
 	}
 
 }

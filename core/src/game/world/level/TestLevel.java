@@ -1,4 +1,4 @@
-package game.world;
+package game.world.level;
 
 import game.entity.Camera;
 import game.entity.Console;
@@ -12,7 +12,7 @@ import java.util.ArrayList;
 public class TestLevel extends Level {
 
 	public TestLevel() {
-		super("map1.tmx");
+		super("test map.tmx");
 	}
 	
 	public void init() {

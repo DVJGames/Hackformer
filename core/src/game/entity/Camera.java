@@ -83,6 +83,7 @@ public class Camera extends Entity {
 	public void centerAt(float x, float y) {
 		bounds.x = x;
 		bounds.y = y;
+		positionCameraInsideMap();
 	}
 
 	public static void initConsoleObject() {
@@ -100,7 +101,7 @@ public class Camera extends Entity {
 
 		consoleObject = new ConsoleObject("obj_camera", fields);
 	}
-	
+
 	static {
 		initConsoleObject();
 	}
