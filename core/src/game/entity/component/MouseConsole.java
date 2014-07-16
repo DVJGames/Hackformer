@@ -2,6 +2,7 @@ package game.entity.component;
 
 import game.entity.Camera;
 import game.entity.ConsoleField;
+import game.entity.Text;
 
 import java.util.ArrayList;
 
@@ -33,6 +34,8 @@ public class MouseConsole extends Component {
 	private static final float VALUE_WIDTH = 35;
 	static final float TRIANGLE_LENGTH = 25;
 
+	private static boolean inConsole = false;
+
 	private ArrayList<ConsoleField<?>> fields;
 	private ArrayList<TriangleSelector> triSelectors = new ArrayList<TriangleSelector>();
 	private SpriteBatch batch = new SpriteBatch();
@@ -50,20 +53,29 @@ public class MouseConsole extends Component {
 		super.update(camera, dt);
 
 		calcNumHacks();
-		
+
 		if (inConsoleMode)
 			if (changeValuesBasedOnMouseInput())
 				return;
 
 		selected = parent.getCollisionBounds().contains(camera.getMousePosInWorld());
 
-		if (Gdx.input.isButtonPressed(0) && Gdx.input.justTouched())
-			inConsoleMode = selected;
+		if (Gdx.input.isButtonPressed(0) && Gdx.input.justTouched()) {
+			if (selected && !inConsole && fields.size() > 0) {
+				inConsoleMode = true;
+				inConsole = true;
+			} else if (!selected) {
+				if (inConsoleMode) {
+					inConsole = false;
+					inConsoleMode = false;
+				}
+			}
+		}
 	}
 
 	private void calcNumHacks() {
 		numHacks = 0;
-		
+
 		for (int i = 0; i < fields.size(); i++)
 			if (fields.get(i).isChanged())
 				numHacks++;
@@ -75,14 +87,14 @@ public class MouseConsole extends Component {
 
 			for (int i = 0; i < triSelectors.size(); i++) {
 				if (triSelectors.get(i).isColliding(mousePos)) {
-					if (triSelectors.get(i).field.isChanged() || numHacks < maxHacks ) {
+					if (triSelectors.get(i).field.isChanged() || numHacks < maxHacks) {
 
 						if (triSelectors.get(i).right)
 							triSelectors.get(i).field.moveRight();
 						else
 							triSelectors.get(i).field.moveLeft();
 					}
-					
+
 					return true;
 				}
 			}
@@ -92,8 +104,8 @@ public class MouseConsole extends Component {
 		return false;
 	}
 
-	public void render(Camera camera, SpriteBatch batch) {
-		super.render(camera, batch);
+	public void renderLate(Camera camera, SpriteBatch batch) {
+		super.renderLate(camera, batch);
 
 		if (!selected && !inConsoleMode)
 			return;
@@ -103,7 +115,10 @@ public class MouseConsole extends Component {
 		if (!inConsoleMode)
 			return;
 
-		renderFields(batch, camera);
+		if (parent instanceof Text)
+			renderText(batch, camera);
+		else
+			renderFields(batch, camera);
 	}
 
 	private void renderBounds(Camera camera) {
@@ -113,29 +128,29 @@ public class MouseConsole extends Component {
 
 		sr.begin(ShapeType.Line);
 		sr.setColor(SELECTED_COLOR);
-		
+
 		if (numHacks > 0)
 			sr.setColor(CHANGED_VALUE_COLOR);
-		
+
 		sr.rect(cBounds.x - camera.bounds.x + camera.bounds.width / 2, cBounds.y - camera.bounds.y + camera.bounds.height / 2, cBounds.width, cBounds.height);
 		sr.end();
 	}
-	
+
 	private void renderFields(SpriteBatch batch, Camera camera) {
 		Rectangle cBounds = parent.getCollisionBounds();
 
 		float x = cBounds.x + cBounds.width - camera.bounds.x + camera.bounds.width / 2;
 		float y = cBounds.y + cBounds.height + (fields.size() - 1) * FIELD_HEIGHT - camera.bounds.y + camera.bounds.height / 2;
-		
+
 		float width = FIELD_WIDTH + VALUE_WIDTH + 2 * (VALUE_X_OFFS + TRIANGLE_LENGTH);
 		float height = FIELD_HEIGHT * 2;
-		
+
 		if (x + width > camera.bounds.width)
 			x -= width + cBounds.width;
-		
+
 		if (y + height > camera.bounds.height)
 			y -= height + cBounds.height;
-		
+
 		Vector2 mousePos = new Vector2(Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY());
 
 		for (int i = 0; i < fields.size(); i++) {
@@ -150,11 +165,24 @@ public class MouseConsole extends Component {
 
 			renderField(valueX, y, VALUE_WIDTH, FIELD_HEIGHT, fields.get(i).getSelectedValue().toString(), fieldColor);
 
-			drawTriangles(valueX, y, true, fields.get(i), mousePos);
-			drawTriangles(valueX, y, false, fields.get(i), mousePos);
+			float triangleSpacing = VALUE_WIDTH + TRIANGLE_LENGTH + VALUE_X_OFFS;
+			
+			drawTriangles(valueX, y, triangleSpacing, true, fields.get(i), mousePos);
+			drawTriangles(valueX, y, triangleSpacing, false, fields.get(i), mousePos);
 
 			y -= (FIELD_HEIGHT + FIELD_SPACING);
 		}
+	}
+
+	private void renderText(SpriteBatch batch, Camera camera) {
+		Vector2 mousePos = new Vector2(Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY());
+		
+		float x = parent.bounds.x  - camera.bounds.x + camera.bounds.width / 2;
+		float y =  parent.bounds.y + parent.bounds.height / 2 - TRIANGLE_LENGTH / 2 - camera.bounds.y + camera.bounds.height / 2;
+		float triangleSpacing = parent.bounds.width + TRIANGLE_LENGTH + VALUE_X_OFFS;
+		
+		drawTriangles(x, y, triangleSpacing, true, fields.get(0), mousePos);
+		drawTriangles(x, y, triangleSpacing, false, fields.get(0), mousePos);
 	}
 
 	private void renderField(float x, float y, float width, float height, String s, Color color) {
@@ -175,7 +203,7 @@ public class MouseConsole extends Component {
 		batch.end();
 	}
 
-	private void drawTriangles(float x, float y, boolean filled, ConsoleField<?> field, Vector2 mousePos) {
+	private void drawTriangles(float x, float y, float triangleSpacing, boolean filled, ConsoleField<?> field, Vector2 mousePos) {
 		if (filled)
 			sr.begin(ShapeType.Filled);
 		else {
@@ -199,7 +227,7 @@ public class MouseConsole extends Component {
 
 		sr.triangle(s.x1, s.y1, s.x2, s.y2, s.x3, s.y3);
 
-		x += VALUE_WIDTH + TRIANGLE_LENGTH + VALUE_X_OFFS;
+		x += triangleSpacing;
 		s = new TriangleSelector(x, y + TRIANGLE_LENGTH, x + TRIANGLE_LENGTH, y + TRIANGLE_LENGTH / 2, x, y, field, true);
 
 		if (filled) {

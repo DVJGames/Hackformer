@@ -39,7 +39,7 @@ public class PlayerDeath extends Entity {
 		bounds.x += dir.x;
 		bounds.y += dir.y;
 
-		circleCenters.add(new Vector2(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2));
+		circleCenters.add(getCenter());
 
 		camera.centerAt(bounds.x, bounds.y);
 

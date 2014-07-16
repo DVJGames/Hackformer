@@ -86,6 +86,9 @@ public class EntityManager implements Disposable {
 		
 		for (int i = 0; i < entities.size(); i++)
 			entities.get(i).render(camera, batch);
+		
+		for (int i = 0; i < entities.size(); i++)
+			entities.get(i).renderLate(camera, batch);
 	}
 	
 	public void addEntity(Entity e) {

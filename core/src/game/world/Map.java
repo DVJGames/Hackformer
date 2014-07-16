@@ -6,6 +6,9 @@ import game.entity.Entity;
 import game.entity.Monster;
 import game.entity.Player;
 import game.entity.Spike;
+import game.entity.Text;
+
+import java.util.ArrayList;
 
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.MapObject;
@@ -186,7 +189,7 @@ public class Map implements Disposable {
 
 		String name = object.getName();
 
-		if (name == null)
+		if (name == null || name == "")
 			return null;
 
 		name = name.toLowerCase();
@@ -205,7 +208,23 @@ public class Map implements Disposable {
 			e = new Spike(x, y);
 		else if (name.equals("door"))
 			e = new Door(x, y);
-
+		else if (name.equals("text")) {
+			int index = 1;
+			
+			ArrayList<String> messages = new ArrayList<String>();
+			
+			while(true) {
+				String message = (String) object.getProperties().get("message" + index++);
+				
+				if (message != null)
+					messages.add(message);
+				else break;
+			}
+			
+			if (!messages.isEmpty())
+				e = new Text(messages, x + rect.getWidth() / 2, y + rect.getHeight());
+		}
+		
 		return e;
 	}
 

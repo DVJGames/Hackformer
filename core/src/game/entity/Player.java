@@ -6,6 +6,7 @@ import game.entity.component.Physics;
 import game.entity.component.Render;
 import game.world.Game;
 import game.world.KeyHandler;
+import game.world.level.LevelFactory;
 
 import java.util.ArrayList;
 
@@ -22,7 +23,7 @@ public class Player extends Entity {
 
 	public static ConsoleObject consoleObject;
 	private static ArrayList<ConsoleField<?>> tempFields;
-	
+
 	public static final float WIDTH = 30, HEIGHT = 46.2f;
 
 	private static final Texture texture = new Texture("textures/ninja.png");
@@ -39,8 +40,8 @@ public class Player extends Entity {
 
 	private boolean[] wasOnGround = new boolean[10];
 	private boolean left = false, right = false, canJump = true;
-	private float moveSpeed;
-	private float climbSpeed;
+	private float moveSpeed = 6;
+	private float climbSpeed = 6;
 	private float moveVelocity = 0;
 	private float moveAccelerationFraction = 40f;
 	private float initialMoveSpeed = 3f;
@@ -51,7 +52,7 @@ public class Player extends Entity {
 	public Player(float x, float y) {
 		super(new Rectangle(x, y, WIDTH, HEIGHT));
 
-		tempFields = fields = initFields();
+		tempFields = fields = initFields(LevelFactory.getLevelNum());
 
 		addComponent(render = new Render(climbAnim));
 		addComponent(physics = new Physics());
@@ -75,8 +76,8 @@ public class Player extends Entity {
 		moveHorizontally();
 		moveVertically();
 		changeBasedOnConsoleVariables();
-
-		if (bounds.y < -bounds.height)
+		
+		if (bounds.y < -bounds.height || bounds.y - camera.bounds.y + camera.bounds.height / 2 > camera.bounds.height && physics.getGravity() <= 0)
 			remove();
 	}
 
@@ -122,7 +123,7 @@ public class Player extends Entity {
 			else
 				amt = initialMoveSpeed;
 		}
-		
+
 		if (amt > 0 && moveVelocity < 0)
 			amt += Math.min(friction, -moveVelocity);
 		else if (amt < 0 && moveVelocity > 0)
@@ -158,7 +159,7 @@ public class Player extends Entity {
 			}
 
 			if (canJump && (wasClimbing || physics.isOnGround() || (KeyHandler.keyClicked(Input.Keys.UP) || KeyHandler.keyClicked(Input.Keys.W)))) {
-				physics.velocity.y += JUMP_SPEED;
+				physics.velocity.y = JUMP_SPEED;
 				jumpCount++;
 			}
 		}
@@ -190,16 +191,30 @@ public class Player extends Entity {
 	}
 
 	private void changeBasedOnConsoleVariables() {
-		physics.setGravity((Float) fields.get(0).getSelectedValue());
-		moveSpeed = (Float) fields.get(1).getSelectedValue();
-		climbSpeed = (Float) fields.get(2).getSelectedValue();
-		maxJumps = (Boolean) fields.get(3).getSelectedValue() ? 2 : 1;
+		for (int i = 0; i < fields.size(); i++) {
+			ConsoleField<?> field = fields.get(i);
+			
+			switch (fields.get(i).getName()) {
+			case "gravity":
+				physics.setGravity((Float) field.getSelectedValue());
+				break;
+			case "double_jump":
+				maxJumps = (Boolean) field.getSelectedValue() ? 2 : 1;
+				break;
+			case "move_speed":
+				moveSpeed = (Float) field.getSelectedValue();
+				break;
+			case "climb_speed":
+				climbSpeed = (Float) field.getSelectedValue();
+				break;
+			}
+		}
 	}
 
 	public Rectangle getCollisionBounds() {
 		return new Rectangle(bounds.x + 4, bounds.y, bounds.width - 8, bounds.height - 5);
 	}
-	
+
 	public void remove() {
 		super.remove();
 		Game.restartLevel();
@@ -209,17 +224,17 @@ public class Player extends Entity {
 		consoleObject = new ConsoleObject("obj_player", tempFields);
 	}
 
-	private static ArrayList<ConsoleField<?>> initFields() {
+	private static ArrayList<ConsoleField<?>> initFields(int levelNum) {
 		ArrayList<ConsoleField<?>> fields = new ArrayList<ConsoleField<?>>();
 
 		ArrayList<Float> gravityOptions = new ArrayList<Float>();
 		gravityOptions.add(-1f);
 		gravityOptions.add(-0.5f);
+		gravityOptions.add(-0.25f);
 		gravityOptions.add(0f);
+		gravityOptions.add(0.25f);
 		gravityOptions.add(0.5f);
 		gravityOptions.add(1f);
-
-		fields.add(new ConsoleField<Float>("gravity", gravityOptions, 3));
 
 		ArrayList<Float> speedOptions = new ArrayList<Float>();
 		speedOptions.add(2f);
@@ -228,10 +243,15 @@ public class Player extends Entity {
 		speedOptions.add(8f);
 		speedOptions.add(10f);
 
-		fields.add(new ConsoleField<Float>("move_speed", speedOptions, 2));
-		fields.add(new ConsoleField<Float>("climb_speed", speedOptions, 2));
+		if (levelNum > 1) {
+			fields.add(new ConsoleField<Float>("gravity", gravityOptions, 5));
+			fields.add(ConsoleField.createBooleanField("double_jump", false));
+		}
 
-		fields.add(ConsoleField.createBooleanField("double_jump", false));
+		if (levelNum > 2) {
+			fields.add(new ConsoleField<Float>("move_speed", speedOptions, 2));
+			fields.add(new ConsoleField<Float>("climb_speed", speedOptions, 2));
+		}
 
 		return fields;
 	}

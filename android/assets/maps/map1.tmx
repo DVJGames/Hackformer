@@ -39,5 +39,15 @@
  <objectgroup name="objects" width="48" height="32">
   <object name="player" gid="385" x="32" y="448"/>
   <object name="door" gid="391" x="592" y="272"/>
+  <object name="text" x="96" y="240" width="224" height="96">
+   <properties>
+    <property name="message1" value="WASD or Arrow Keys\nTo Move"/>
+   </properties>
+  </object>
+  <object name="text" x="528" y="336" width="208" height="96">
+   <properties>
+    <property name="message1" value="D or Down Arrow\nTo Drop Down\nFrom Bridges"/>
+   </properties>
+  </object>
  </objectgroup>
 </map>

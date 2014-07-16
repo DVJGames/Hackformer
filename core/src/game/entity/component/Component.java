@@ -36,6 +36,9 @@ public abstract class Component implements Disposable {
 	public void render(Camera camera, SpriteBatch batch) {
 	}
 
+	public void renderLate(Camera camera, SpriteBatch batch) {
+	}
+	
 	public void dispose() {
 	}
 

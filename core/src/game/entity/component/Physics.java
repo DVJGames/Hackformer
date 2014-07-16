@@ -27,7 +27,7 @@ public class Physics extends Component {
 
 	public void update(Camera camera, float dt) {
 		super.update(camera, dt);
-		
+
 		boolean onLadder = !yCollide && canClimb && parent.map.onLadder(parent.getCollisionBounds());
 		bridgeCollide = false;
 
@@ -43,7 +43,7 @@ public class Physics extends Component {
 		int tileY = (int) ((cBounds.y) / Map.TILE_SIZE);
 
 		if (intersectsDarkPlatforms)
-			if (parent.map.bridgeAt(tileX, tileY) || ((velocity.x > 0 && (parent.map.upLeftBridgeAt(tileX, tileY))) || (velocity.y > 0 && (parent.map.upRightBridgeAt(tileX, tileY)) || (velocity.y < 0 && (parent.map.upLeftBridgeAt(tileX, tileY))))))
+			if (parent.map.bridgeAt(tileX, tileY) || parent.map.upLeftBridgeAt(tileX, tileY) || parent.map.upRightBridgeAt(tileX, tileY))
 				parent.bounds.y += bridgeYVelChange * dt;
 
 		if (velocity.y < -TERMINAL_VELOCITY)
@@ -102,7 +102,7 @@ public class Physics extends Component {
 		float y = collisionBounds.y + velocity.y;
 		float width = collisionBounds.width;
 		float height = collisionBounds.height;
-		
+
 		if (x + width < 0 || x >= parent.map.getWidth() * Map.TILE_SIZE)
 			return;
 
@@ -111,8 +111,8 @@ public class Physics extends Component {
 			int tileX = (int) (xPos / Map.TILE_SIZE);
 			int tileY = (int) (y / Map.TILE_SIZE);
 
-				if (intersectsDarkPlatforms && velocity.y < 0 && gravity > 0)
-					solid |= parent.map.darkPlatformAt(tileX, tileY) && !parent.map.darkPlatformAt(tileX, (int) ((y + MIN_STEP) / Map.TILE_SIZE));
+			if (intersectsDarkPlatforms && velocity.y < 0 && gravity > 0)
+				solid |= parent.map.darkPlatformAt(tileX, tileY) && !parent.map.darkPlatformAt(tileX, (int) ((y + MIN_STEP) / Map.TILE_SIZE));
 
 			for (float yPos = y; yPos <= y + height; yPos += MIN_STEP) {
 				tileY = (int) (yPos / Map.TILE_SIZE);
@@ -125,8 +125,8 @@ public class Physics extends Component {
 					if (intersectsDarkPlatforms)
 						solid = true;
 				}
-				
-				if (velocity.y > 0 && gravity <= 0) 
+
+				if (velocity.y > 0 && gravity <= 0)
 					solid |= parent.map.darkPlatformAt(tileX, tileY, true) && !parent.map.darkPlatformAt(tileX, (int) ((y + MIN_STEP) / Map.TILE_SIZE));
 			}
 		}
@@ -140,19 +140,20 @@ public class Physics extends Component {
 			} else {
 				if (parent.map.onLadder(collisionBounds)) {
 					boolean nudgeRight = true;
-					
+
 					for (float i = 0; i < Map.TILE_SIZE; i += MIN_STEP) {
 						collisionBounds.x = x + i;
-						
+
 						if (!parent.map.onLadder(collisionBounds)) {
 							nudgeRight = false;
 							break;
 						}
 					}
-					
+
 					if (nudgeRight)
 						parent.bounds.x += LADDER_NUDGE;
-					else parent.bounds.x -= LADDER_NUDGE;
+					else
+						parent.bounds.x -= LADDER_NUDGE;
 				}
 			}
 
@@ -171,5 +172,9 @@ public class Physics extends Component {
 
 	public void flickerDarkPlatformIntersection() {
 		intersectsDarkPlatforms = false;
+	}
+
+	public float getGravity() {
+		return gravity;
 	}
 }

@@ -12,7 +12,7 @@ import java.util.ArrayList;
 public class TestLevel extends Level {
 
 	public TestLevel() {
-		super("test map.tmx");
+		super("map3.tmx");
 	}
 	
 	public void init() {

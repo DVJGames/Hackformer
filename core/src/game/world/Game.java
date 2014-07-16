@@ -1,6 +1,7 @@
 package game.world;
 
 import game.world.level.Level;
+import game.world.level.LevelFactory;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;

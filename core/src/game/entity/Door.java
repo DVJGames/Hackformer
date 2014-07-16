@@ -2,7 +2,7 @@ package game.entity;
 
 import game.entity.component.Render;
 import game.world.Game;
-import game.world.LevelFactory;
+import game.world.level.LevelFactory;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;

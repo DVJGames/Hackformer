@@ -9,7 +9,7 @@ import game.world.Map;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
 
-public abstract class Level {
+public class Level {
 	
 	protected Map map;
 	protected EntityManager manager;
